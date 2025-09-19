@@ -16,7 +16,7 @@ A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is d
 
 ### ✨ Key Features
 
--   **Flexible Image Inputs**: Supports zero, one, or two image inputs, making it perfect for tasks from text generation to creating complex prompts for video transitions.
+-   **Flexible Image Inputs**: Supports zero, one, or two image inputs, making it perfect for tasks from text generation to creating complex prompts for video transitions (e.g., start frame to end frame).
 -   **Universal API Compatibility**: Works with any service compatible with the OpenAI API V1 `chat/completions` endpoint, such as Ollama, DeepSeek, Groq, and official OpenAI APIs.
 -   **Smart GPU Cleanup**: Automatically detects local Ollama instances and executes `ollama stop <model_name>` after each run to free up VRAM.
 -   **Advanced Seed Control**: Offers `fixed`, `increment`, `decrement`, and `randomize` options for the seed value after each generation, enabling creative automation.
@@ -50,22 +50,26 @@ A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is d
 
 ### 💡 How to Use
 
-1.  **Finding the Node**: In ComfyUI, you can find the node by:
-    -   Right-clicking -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node`.
-    -   Double-clicking and searching for `FeiMao-326 General API Node`.
+1.  **Finding the Node**: In ComfyUI, you can find the node by right-clicking -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node`.
+
+    ![FeiMao-326 Node Interface](./assets/node_interface.png)
 
 2.  **Seed Control Setup**: To enable automatic seed changes (e.g., `randomize`), connect the `seed` output of the node back to its own `seed` input. This creates a loop that updates the seed after each run.
 
 3.  **Usage Scenarios**:
     -   **📝 Text-Only Generation**: Leave both `image_1` and `image_2` disconnected.
     -   **🖼️ Single Image Description**: Connect an image to `image_1`.
-    -   **🎬 Dual Image for Video Transitions**: Connect a start frame to `image_1` and an end frame to `image_2`. Use a prompt that instructs the AI to generate a transition between them.
+    -   **🎬 Dual Image for Video Transitions**: Connect a start frame to `image_1` and an end frame to `image_2`.
+
+    Below is a complete example workflow for the dual image transition task:
+
+    ![Example Workflow](./assets/workflow_example.png)
 
 4.  **API Connection Examples**:
     -   **Local Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
         -   `api_key`: `ollama`
-        -   `model`: `llava` (or another vision-capable model)
+        -   `model`: `gemma3:4b` (or another vision-capable model)
         -   `cleanup_local_gpu`: Keep it checked (True).
     -   **External API (e.g., OpenAI)**:
         -   `api_baseurl`: `https://api.openai.com/v1`
@@ -119,22 +123,26 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 
 ### 💡 如何使用
 
-1.  **找到节点**: 在 ComfyUI 中，您可以通过以下方式找到节点：
-    -   右键菜单 -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node`。
-    -   双击画布并搜索 `FeiMao-326 General API Node`。
+1.  **找到节点**: 在 ComfyUI 中，您可以通过右键菜单 -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node` 找到它。
+
+    ![FeiMao-326 节点界面](./assets/node_interface.png)
 
 2.  **设置种子控制**: 若要启用自动种子变更（例如 `randomize`），请将节点的 `seed` **输出**端口连接回它自身的 `seed` **输入**端口。这个“循环”连接会在每次运行后自动更新种子值。
 
 3.  **使用场景**:
     -   **📝 纯文本生成**: 将 `image_1` 和 `image_2` 保持断开。
     -   **🖼️ 单图描述**: 连接一张图片到 `image_1` 接口。
-    -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。使用提示词来指示 AI 生成两张图之间的转场描述。
+    -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。
+
+    下面是一个完整的双图转场任务的示例工作流：
+
+    ![示例工作流](./assets/workflow_example.png)
 
 4.  **API 连接示例**:
     -   **本地 Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
         -   `api_key`: `ollama`
-        -   `model`: `llava` (或其他支持视觉的模型)
+        -   `model`: `gemma3:4b` (或其他支持视觉的模型)
         -   `cleanup_local_gpu`: 保持勾选 (True)。
     -   **外部 API (以 OpenAI 为例)**:
         -   `api_baseurl`: `https://api.openai.com/v1`
