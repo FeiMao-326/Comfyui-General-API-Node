@@ -1,0 +1,14 @@
+{
+    "name": "comfyui-general-api-node",
+    "version": "1.0.0",
+    "author": "FeiMao-326",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/FeiMao-326/Comfyui-General-API-Node.git"
+    },
+    "description": "A robust and versatile Vision LLM API node for ComfyUI. Supports multi-image inputs, auto GPU cleanup for Ollama, and advanced seed control.",
+    "files": [
+        "__init__.py",
+        "general_api_node.py"
+    ]
+}
