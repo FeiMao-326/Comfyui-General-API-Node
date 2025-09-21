@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+__version__ = "1.0.1"
+
 from .general_api_node import FeiMao_326_GeneralAPINode
+from .text_utils_node import FeiMao_326_TextBatchReplace
+from .json_parser_node import FeiMao_326_JsonParser
 
 NODE_CLASS_MAPPINGS = {
-    "FeiMao_326_GeneralAPINode": FeiMao_326_GeneralAPINode
+    "FeiMao_326_GeneralAPINode": FeiMao_326_GeneralAPINode,
+    "FeiMao_326_TextBatchReplace": FeiMao_326_TextBatchReplace,
+    "FeiMao_326_JsonParser": FeiMao_326_JsonParser,
+        "FeiMao_326_JsonParser": FeiMao_326_JsonParser,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FeiMao_326_GeneralAPINode": "FeiMao-326 General API Node"
+    "FeiMao_326_GeneralAPINode": f"General API Node v{__version__} (FeiMao-326)",
+    "FeiMao_326_TextBatchReplace": f"Text Batch Replace (FeiMao-326)",
+    "FeiMao_326_JsonParser": f"JSON Parser (FeiMao-326)",
 }
 
-print("✅ FeiMao-326 General API Node loaded successfully.")
+print(f"✅ FeiMao-326 Custom Nodes (Version: {__version__}) loaded successfully.")

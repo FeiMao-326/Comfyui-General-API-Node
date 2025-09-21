@@ -1,6 +1,6 @@
 <div align="center">
 
-# ComfyUI General API Node
+# ComfyUI General API Node Pack
 *Created by FeiMao-326*
 
 [**English**](#english) | [**中文**](#chinese)
@@ -12,25 +12,28 @@
 
 ## 🇬🇧 English
 
-A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is designed to provide a unified interface for various OpenAI-compatible services, supporting multi-image inputs, and featuring intelligent, automatic GPU cleanup for local Ollama users.
+A suite of powerful and versatile utility nodes for ComfyUI, designed to streamline complex workflows involving Large Language Models and text manipulation. This pack is created by FeiMao-326.
 
-### ✨ Key Features
+### ✨ Nodes Included
 
--   **Flexible Image Inputs**: Supports zero, one, or two image inputs, making it perfect for tasks from text generation to creating complex prompts for video transitions (e.g., start frame to end frame).
--   **Universal API Compatibility**: Works with any service compatible with the OpenAI API V1 `chat/completions` endpoint, such as Ollama, DeepSeek, Groq, and official OpenAI APIs.
--   **Smart GPU Cleanup**: Automatically detects local Ollama instances and executes `ollama stop <model_name>` after each run to free up VRAM.
--   **Advanced Seed Control**: Offers `fixed`, `increment`, `decrement`, and `randomize` options for the seed value after each generation, enabling creative automation.
--   **Robust & User-Friendly**: Features secure seed handling to prevent errors, robust image conversion for better compatibility, adjustable `max_tokens`, and helpful error messages for easier debugging.
+This pack contains the following nodes, all available under the **`FeiMao-326`** category:
+
+1.  **General API Node**: A robust Vision LLM API node.
+    -   Supports multi-image inputs.
+    -   Features automatic GPU cleanup for local Ollama.
+    -   Includes advanced seed control (`fixed`, `increment`, `randomize`).
+2.  **Text Batch Replace**: A powerful text utility for performing up to 10 find-and-replace operations in a single node.
+3.  **JSON Parser**: Deconstructs complex, nested JSON payloads into 8 separate text outputs with a built-in labeled preview. It deeply searches for user-defined keys, perfect for handling structured prompts.
 
 ### 🔧 Installation
 
 1.  **Clone the Repository**
-    -   Open your terminal or command prompt.
+    -   Open your terminal.
     -   Navigate to your ComfyUI `custom_nodes` directory:
         ```bash
         cd path/to/your/ComfyUI/custom_nodes/
         ```
-    -   Clone this repository using `git clone`:
+    -   Clone this repository:
         ```bash
         git clone https://github.com/FeiMao-326/Comfyui-General-API-Node.git
         ```
@@ -40,7 +43,7 @@ A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is d
         ```bash
         cd Comfyui-General-API-Node
         ```
-    -   Install the required dependencies using `pip`:
+    -   Install the required dependencies:
         ```bash
         pip install -r requirements.txt
         ```
@@ -50,6 +53,7 @@ A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is d
 
 ### 💡 How to Use
 
+#### General API Node
 1.  **Finding the Node**: In ComfyUI, you can find the node by right-clicking -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node`.
 
     ![FeiMao-326 Node Interface](./assets/node_interface.png)
@@ -60,50 +64,63 @@ A robust and versatile Vision Language Model (LLM) API node for ComfyUI. It is d
     -   **📝 Text-Only Generation**: Leave both `image_1` and `image_2` disconnected.
     -   **🖼️ Single Image Description**: Connect an image to `image_1`.
     -   **🎬 Dual Image for Video Transitions**: Connect a start frame to `image_1` and an end frame to `image_2`.
-
-    Below is a complete example workflow for the dual image transition task:
-
-    ![Example Workflow](./assets/workflow_example.png)
-
 4.  **API Connection Examples**:
     -   **Local Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
         -   `api_key`: `ollama`
-        -   `model`: `llava` (or another vision-capable model)
+        -   `model`: `gemma3:4b` (or another vision-capable model)
         -   `cleanup_local_gpu`: Keep it checked (True).
     -   **External API (e.g., OpenAI)**:
         -   `api_baseurl`: `https://api.openai.com/v1`
         -   `api_key`: Your OpenAI API key (`sk-xxxxxxxx`)
         -   `model`: `gpt-4o`
+    Below is a complete example workflow for the dual image transition task:
+
+![General API Node Interface](./assets/node_interface.png)
+![General API Node Workflow Example](./assets/workflow_example.png)
+
+#### Text Batch Replace
+-   Input any text into the `text` field.
+-   Fill in the `find_x` and `replace_x` fields to perform sequential replacements.
+![Text Batch Replace Interface](./assets/text_batch_replace.png)
+
+#### JSON Parser
+-   Paste your complex JSON into the `json_payload` field.
+-   In the `keys_to_extract` field, enter the keys you want to extract, separated by commas (e.g., `shot, subject, audio`).
+-   The node will find these keys anywhere in the JSON, output their combined values to the corresponding `output_x` ports, and show a preview inside the node.
+![JSON Parser Interface](./assets/json_parser.png)
 
 ### 📜 License
 
-This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details.
 
 ---
 <a name="chinese"></a>
 
 ## 🇨🇳 中文
 
-一款为 ComfyUI 设计的、功能强大且极为稳健的通用视觉大语言模型 (LLM) API 节点。它旨在为各种兼容 OpenAI 的 API 服务提供统一的接口，支持多图像输入，并为本地 Ollama 用户提供智能的 GPU 自动清理功能。
+一套为 ComfyUI 设计的、功能强大且用途广泛的实用节点包，旨在简化涉及大语言模型和文本处理的复杂工作流。本节点包由 FeiMao-326 创作。
 
-### ✨ 主要功能
+### ✨ 包含的节点
 
--   **灵活的图像输入**: 支持零、一或两张图像输入，完美适用于从纯文本生成，到为视频转场创建复杂提示词的各种任务。
--   **通用 API 兼容性**: 支持任何兼容 OpenAI API V1 `chat/completions` 接口的服务，例如 Ollama, DeepSeek, Groq, 以及 OpenAI 官方 API。
--   **智能 GPU 清理**: 自动检测本地 Ollama 实例，并在每次运行后执行 `ollama stop <model_name>` 命令以释放您的宝贵显存。
--   **高级种子控制**: 在每次生成后，为种子值提供 `fixed` (固定), `increment` (递增), `decrement` (递减), 和 `randomize` (随机) 选项，实现创造性的自动化工作流。
--   **稳健且友好**: 拥有安全的种子处理机制以防止错误、强大的图像转换以提高兼容性、可调节的 `max_tokens`，以及智能的错误提示，让调试更轻松。
+本节点包包含以下三个节点，您都可以在 **`FeiMao-326`** 分类下找到它们：
+
+1.  **General API Node**: 一个强大的视觉LLM API节点。
+    -   支持多图像输入。
+    -   为本地 Ollama 提供自动 GPU 清理功能。
+    -   包含高级种子控制（`固定`, `递增`, `随机` 等）。
+2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达10次的查找与替换操作。
+3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为8个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
 
 ### 🔧 安装方法
 
 1.  **克隆仓库**
-    -   打开您的终端或命令行工具。
+    -   打开您的终端。
     -   导航到您的 ComfyUI `custom_nodes` 文件夹：
         ```bash
         cd path/to/your/ComfyUI/custom_nodes/
         ```
-    -   使用 `git clone` 克隆此仓库：
+    -   克隆此仓库：
         ```bash
         git clone https://github.com/FeiMao-326/Comfyui-General-API-Node.git
         ```
@@ -113,7 +130,7 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
         ```bash
         cd Comfyui-General-API-Node
         ```
-    -   使用 `pip` 安装所有必需的依赖项：
+    -   安装所需的依赖项：
         ```bash
         pip install -r requirements.txt
         ```
@@ -123,6 +140,7 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 
 ### 💡 如何使用
 
+#### General API Node
 1.  **找到节点**: 在 ComfyUI 中，您可以通过右键菜单 -> `Add Node` -> `FeiMao-326` -> `FeiMao-326 General API Node` 找到它。
 
     ![FeiMao-326 节点界面](./assets/node_interface.png)
@@ -133,22 +151,32 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
     -   **📝 纯文本生成**: 将 `image_1` 和 `image_2` 保持断开。
     -   **🖼️ 单图描述**: 连接一张图片到 `image_1` 接口。
     -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。
-
-    下面是一个完整的双图转场任务的示例工作流：
-
-    ![示例工作流](./assets/workflow_example.png)
-
 4.  **API 连接示例**:
     -   **本地 Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
         -   `api_key`: `ollama`
-        -   `model`: `llava` (或其他支持视觉的模型)
+        -   `model`: `gemma3:4b` (或其他支持视觉的模型)
         -   `cleanup_local_gpu`: 保持勾选 (True)。
     -   **外部 API (以 OpenAI 为例)**:
         -   `api_baseurl`: `https://api.openai.com/v1`
         -   `api_key`: 填入您的 OpenAI 密钥 (`sk-xxxxxxxx`)
         -   `model`: `gpt-4o`
+    下面是一个完整的双图转场任务的示例工作流：
+
+![General API Node 界面](./assets/node_interface.png)
+![General API Node 工作流示例](./assets/workflow_example.png)
+
+#### Text Batch Replace
+-   在 `text` 字段中输入任意文本。
+-   填写 `find_x` 和 `replace_x` 字段以执行顺序替换。
+![Text Batch Replace 界面](./assets/text_batch_replace.png)
+
+#### JSON Parser
+-   将您的复杂JSON粘贴到 `json_payload` 字段中。
+-   在 `keys_to_extract` 字段中，输入您想提取的关键字，用逗号分隔（例如 `shot, subject, audio`）。
+-   节点会在JSON的任何位置找到这些关键字，将其合并后的值输出到对应的 `output_x` 端口，并在节点内显示预览。
+![JSON Parser 界面](./assets/json_parser.png)
 
 ### 📜 许可证
 
-本项目采用 Apache 2.0 许可证。详情请参阅 [LICENSE](LICENSE) 文件。
+本项目采用 Apache 2.0 许可证。详情请参阅 [LICENSE](LICENSE) 和 [NOTICE](NOTICE) 文件。
