@@ -76,7 +76,6 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
         -   `model`: `gpt-4o`
     Below is a complete example workflow for the dual image transition task:
 
-![General API Node Interface](./assets/node_interface.png)
 ![General API Node Workflow Example](./assets/workflow_example.png)
 
 #### Text Batch Replace
@@ -163,7 +162,6 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
         -   `model`: `gpt-4o`
     下面是一个完整的双图转场任务的示例工作流：
 
-![General API Node 界面](./assets/node_interface.png)
 ![General API Node 工作流示例](./assets/workflow_example.png)
 
 #### Text Batch Replace
