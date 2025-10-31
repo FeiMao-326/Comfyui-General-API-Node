@@ -2,6 +2,7 @@
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
+# You may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -18,6 +19,7 @@ import numpy as np
 from PIL import Image
 import subprocess
 import secrets
+import locale # <-- [MODIFIED] Added this line to get system encoding
 
 try:
     import openai
@@ -93,19 +95,35 @@ class FeiMao_326_GeneralAPINode:
         pil_image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
     
+    # --- START OF MODIFIED FUNCTION ---
     def cleanup_with_ollama_cli(self, model):
         command = ['ollama', 'stop', model]
         print(f"🔵 [FeiMao-326 API Node] Attempting to unload local model via CLI: {' '.join(command)}")
         try:
-            result = subprocess.run(command, capture_output=True, text=True, timeout=20, check=False)
+            # Removed text=True to capture raw bytes
+            result = subprocess.run(command, capture_output=True, timeout=20, check=False)
+            
             if result.returncode == 0:
                 print(f"✅ [FeiMao-326 API Node] CLI command executed successfully. Model '{model}' unloaded.")
             else:
-                print(f"❌ [FeiMao-326 API Node] CLI command execution failed: {result.stderr.strip()}")
+                # Added robust decoding logic
+                stderr_output = result.stderr
+                error_message = ""
+                try:
+                    # First, try decoding with standard UTF-8
+                    error_message = stderr_output.decode('utf-8')
+                except UnicodeDecodeError:
+                    # If UTF-8 fails, fall back to the system's preferred encoding (e.g., GBK on Chinese Windows)
+                    # errors='replace' prevents a crash if a character still can't be decoded
+                    system_encoding = locale.getpreferredencoding()
+                    error_message = stderr_output.decode(system_encoding, errors='replace')
+
+                print(f"❌ [FeiMao-326 API Node] CLI command execution failed: {error_message.strip()}")
         except FileNotFoundError:
             print("❌ [FeiMao-326 API Node] Error: 'ollama' command not found. Please ensure Ollama is installed correctly.")
         except Exception as e:
             print(f"⚠️ [FeiMao-326 API Node] An error occurred while executing the CLI command: {str(e)}")
+    # --- END OF MODIFIED FUNCTION ---
 
     def execute(self, api_baseurl, api_key, model, role, prompt, seed, temperature, max_tokens, control_after_generate,
                 cleanup_local_gpu=True, image_1=None, image_2=None):
