@@ -1,8 +1,0 @@
-ython cache
-pycache/
-*.pyc
-*.pyo
-*.pyd
-Virtual environment
-venv/
-.venv/

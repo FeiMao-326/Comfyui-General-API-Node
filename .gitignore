@@ -1,0 +1,51 @@
+# ================================================================= #
+#       FeiMao-326's Professional .gitignore for ComfyUI Nodes      #
+# ================================================================= #
+
+# 1. Python Cache & Virtual Environments
+# -----------------------------------------------------------------
+# These are automatically generated and should never be committed.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+.env
+
+# 2. IDE & Editor Configuration
+# -----------------------------------------------------------------
+# These are specific to your local development setup.
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# 3. Build & Distribution Artifacts
+# -----------------------------------------------------------------
+# These are generated when you package your project.
+build/
+dist/
+*.egg-info/
+*.so
+*.pyd
+
+# 4. Operating System Files
+# -----------------------------------------------------------------
+# Annoying files created by macOS, Windows, and Linux.
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 5. ComfyUI Specific Files
+# -----------------------------------------------------------------
+# Never commit log files or downloaded models.
+*.log
+*.ckpt
+*.safetensors
+*.pt
+*.onnx
