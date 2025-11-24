@@ -24,6 +24,8 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
     -   Includes advanced seed control (`fixed`, `increment`, `randomize`).
 2.  **Text Batch Replace**: A powerful text utility for performing up to 10 find-and-replace operations in a single node.
 3.  **JSON Parser**: Deconstructs complex, nested JSON payloads into 8 separate text outputs with a built-in labeled preview. It deeply searches for user-defined keys, perfect for handling structured prompts.
+4.  **Show Text**: Displays input text directly on the node UI.
+5.  **Simple Text**: A simple text input node for passing strings to other nodes.
 
 ### 🔧 Installation
 
@@ -64,6 +66,7 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
     -   **📝 Text-Only Generation**: Leave both `image_1` and `image_2` disconnected.
     -   **🖼️ Single Image Description**: Connect an image to `image_1`.
     -   **🎬 Dual Image for Video Transitions**: Connect a start frame to `image_1` and an end frame to `image_2`.
+    -   **📸 Multi-Image Analysis**: You can connect up to 3 images (`image_1`, `image_2`, `image_3`) for complex analysis tasks.
 4.  **API Connection Examples**:
     -   **Local Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
@@ -89,6 +92,14 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
 -   The node will find these keys anywhere in the JSON, output their combined values to the corresponding `output_x` ports, and show a preview inside the node.
 ![JSON Parser Interface](./assets/json_parser.png)
 
+#### Show Text
+-   Connect any string output to the `text` input.
+-   The text will be displayed on the node itself.
+
+#### Simple Text
+-   Enter your text in the text box.
+-   Connect the `text` output to any node requiring string input.
+
 ### 📜 License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details.
@@ -110,6 +121,8 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
     -   包含高级种子控制（`固定`, `递增`, `随机` 等）。
 2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达10次的查找与替换操作。
 3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为8个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
+4.  **Show Text**: 直接在节点界面上显示输入的文本。
+5.  **Simple Text**: 一个简单的文本输入节点，用于将字符串传递给其他节点。
 
 ### 🔧 安装方法
 
@@ -150,6 +163,7 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
     -   **📝 纯文本生成**: 将 `image_1` 和 `image_2` 保持断开。
     -   **🖼️ 单图描述**: 连接一张图片到 `image_1` 接口。
     -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。
+    -   **📸 多图分析**: 您最多可以连接3张图片 (`image_1`, `image_2`, `image_3`) 进行复杂的分析任务。
 4.  **API 连接示例**:
     -   **本地 Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
@@ -174,6 +188,14 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 -   在 `keys_to_extract` 字段中，输入您想提取的关键字，用逗号分隔（例如 `shot, subject, audio`）。
 -   节点会在JSON的任何位置找到这些关键字，将其合并后的值输出到对应的 `output_x` 端口，并在节点内显示预览。
 ![JSON Parser 界面](./assets/json_parser.png)
+
+#### Show Text
+-   将任何字符串输出连接到 `text` 输入。
+-   文本将直接显示在节点上。
+
+#### Simple Text
+-   在文本框中输入您的文本。
+-   将 `text` 输出连接到任何需要字符串输入的节点。
 
 ### 📜 许可证
 

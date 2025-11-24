@@ -1,2 +1,4 @@
 # Core dependency for API communication
 openai>=1.0.0
+numpy
+Pillow

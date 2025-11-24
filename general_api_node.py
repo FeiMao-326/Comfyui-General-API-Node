@@ -61,7 +61,8 @@ class FeiMao_326_GeneralAPINode:
             },
             "optional": {
                 "image_1": ("IMAGE",),
-                "image_2": ("IMAGE",)
+                "image_2": ("IMAGE",),
+                "image_3": ("IMAGE",)
             }
         }
 
@@ -126,7 +127,7 @@ class FeiMao_326_GeneralAPINode:
     # --- END OF MODIFIED FUNCTION ---
 
     def execute(self, api_baseurl, api_key, model, role, prompt, seed, temperature, max_tokens, control_after_generate,
-                cleanup_local_gpu=True, image_1=None, image_2=None):
+                cleanup_local_gpu=True, image_1=None, image_2=None, image_3=None):
         
         current_seed = self._normalize_seed(seed)
         
@@ -161,6 +162,15 @@ class FeiMao_326_GeneralAPINode:
                 has_images = True
             except Exception as e:
                 return (f"Failed to process image 2: {type(e).__name__}: {str(e)}", current_seed)
+
+        if image_3 is not None:
+            try:
+                print(f"🖼️ [FeiMao-326 API Node] Processing image 3...")
+                base64_image = self.tensor_to_base64_image(image_3)
+                user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
+                has_images = True
+            except Exception as e:
+                return (f"Failed to process image 3: {type(e).__name__}: {str(e)}", current_seed)
         
         messages.append({"role": "user", "content": user_content if has_images else prompt})
         
