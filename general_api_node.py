@@ -127,7 +127,7 @@ class FeiMao_326_GeneralAPINode:
     # --- END OF MODIFIED FUNCTION ---
 
     def execute(self, api_baseurl, api_key, model, role, prompt, seed, temperature, max_tokens, control_after_generate,
-                cleanup_local_gpu=True, image_1=None, image_2=None, image_3=None):
+                cleanup_local_gpu=True, image_1=None, image_2=None, image_3=None, **kwargs):
         
         current_seed = self._normalize_seed(seed)
         
@@ -145,32 +145,34 @@ class FeiMao_326_GeneralAPINode:
         user_content = [{"type": "text", "text": prompt}]
         
         has_images = False
-        if image_1 is not None:
-            try:
-                print(f"🖼️ [FeiMao-326 API Node] Processing image 1...")
-                base64_image = self.tensor_to_base64_image(image_1)
-                user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
-                has_images = True
-            except Exception as e:
-                return (f"Failed to process image 1: {type(e).__name__}: {str(e)}", current_seed)
         
-        if image_2 is not None:
+        # Collect all image inputs
+        image_inputs = []
+        if image_1 is not None: image_inputs.append(("image_1", image_1))
+        if image_2 is not None: image_inputs.append(("image_2", image_2))
+        if image_3 is not None: image_inputs.append(("image_3", image_3))
+        
+        for key, value in kwargs.items():
+            if key.startswith("image_") and value is not None:
+                image_inputs.append((key, value))
+        
+        # Sort images by index (image_1, image_2, ..., image_10)
+        def get_image_index(name):
             try:
-                print(f"🖼️ [FeiMao-326 API Node] Processing image 2...")
-                base64_image = self.tensor_to_base64_image(image_2)
+                return int(name.split("_")[1])
+            except (IndexError, ValueError):
+                return 999999
+        
+        image_inputs.sort(key=lambda x: get_image_index(x[0]))
+        
+        for name, img_tensor in image_inputs:
+            try:
+                print(f"🖼️ [FeiMao-326 API Node] Processing {name}...")
+                base64_image = self.tensor_to_base64_image(img_tensor)
                 user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
                 has_images = True
             except Exception as e:
-                return (f"Failed to process image 2: {type(e).__name__}: {str(e)}", current_seed)
-
-        if image_3 is not None:
-            try:
-                print(f"🖼️ [FeiMao-326 API Node] Processing image 3...")
-                base64_image = self.tensor_to_base64_image(image_3)
-                user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
-                has_images = True
-            except Exception as e:
-                return (f"Failed to process image 3: {type(e).__name__}: {str(e)}", current_seed)
+                return (f"Failed to process {name}: {type(e).__name__}: {str(e)}", current_seed)
         
         messages.append({"role": "user", "content": user_content if has_images else prompt})
         

@@ -21,10 +21,19 @@ class ShowTextNode:
             },
         }
 
+    INPUT_IS_LIST = True
     RETURN_TYPES = ("STRING",)
+    OUTPUT_IS_LIST = (True,)
     FUNCTION = "notify"
     OUTPUT_NODE = True
     CATEGORY = "FeiMao-326"
 
     def notify(self, text):
-        return {"ui": {"text": [text]}, "result": (text,)}
+        # text is always a list because INPUT_IS_LIST = True
+        # If connected to a single string output, it will be a list with one item.
+        # If connected to a batch (like Text Iterator), it will be a list of all items.
+        
+        # Join them for display or pass as list? 
+        # The frontend likely expects a list of strings if we want multiple lines/blocks.
+        # Let's return the list directly to "text" key.
+        return {"ui": {"text": text}, "result": (text,)}

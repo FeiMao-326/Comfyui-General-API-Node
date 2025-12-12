@@ -22,10 +22,13 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
     -   Supports multi-image inputs.
     -   Features automatic GPU cleanup for local Ollama.
     -   Includes advanced seed control (`fixed`, `increment`, `randomize`).
-2.  **Text Batch Replace**: A powerful text utility for performing up to 10 find-and-replace operations in a single node.
-3.  **JSON Parser**: Deconstructs complex, nested JSON payloads into 8 separate text outputs with a built-in labeled preview. It deeply searches for user-defined keys, perfect for handling structured prompts.
+2.  **Text Batch Replace**: A powerful text utility for performing up to 8 find-and-replace operations in a single node.
+3.  **JSON Parser**: Deconstructs complex, nested JSON payloads into multiple separate text outputs with a built-in labeled preview. It deeply searches for user-defined keys, perfect for handling structured prompts.
 4.  **Show Text**: Displays input text directly on the node UI.
 5.  **Simple Text**: A simple text input node for passing strings to other nodes.
+6.  **Text Split By Delimiter**: Splits a text string into a list based on a delimiter.
+7.  **Get List Element**: Retrieves a specific element from a list by index.
+8.  **Text Iterator**: Splits text by delimiter and outputs it as a batch, triggering batch execution for downstream nodes.
 
 ### 🔧 Installation
 
@@ -66,7 +69,7 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
     -   **📝 Text-Only Generation**: Leave both `image_1` and `image_2` disconnected.
     -   **🖼️ Single Image Description**: Connect an image to `image_1`.
     -   **🎬 Dual Image for Video Transitions**: Connect a start frame to `image_1` and an end frame to `image_2`.
-    -   **📸 Multi-Image Analysis**: You can connect up to 3 images (`image_1`, `image_2`, `image_3`) for complex analysis tasks.
+    -   **📸 Multi-Image Analysis**: You can connect multiple images (`image_1`, `image_2`, `image_3...etc`) for complex analysis tasks.
 4.  **API Connection Examples**:
     -   **Local Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
@@ -100,6 +103,21 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
 -   Enter your text in the text box.
 -   Connect the `text` output to any node requiring string input.
 
+#### Text Split By Delimiter
+-   Input text and a delimiter (default is comma).
+-   Outputs a `LIST` type that can be used with `Get List Element`.
+![Text Split By Delimiter](./assets/text_split.png)
+
+#### Get List Element
+-   Connect a `LIST` input.
+-   Specify the index (0-based) to retrieve a specific string.
+
+#### Text Iterator
+-   Input text and a delimiter.
+-   Outputs each split item as a separate batch item.
+-   Useful for iterating over a list of prompts or parameters.
+![Text Iterator Interface](./assets/Text_Iterator.png)
+
 ### 📜 License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details.
@@ -113,16 +131,19 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 
 ### ✨ 包含的节点
 
-本节点包包含以下三个节点，您都可以在 **`FeiMao-326`** 分类下找到它们：
+本节点包包含以下节点，您都可以在 **`FeiMao-326`** 分类下找到它们：
 
 1.  **General API Node**: 一个强大的视觉LLM API节点。
     -   支持多图像输入。
     -   为本地 Ollama 提供自动 GPU 清理功能。
     -   包含高级种子控制（`固定`, `递增`, `随机` 等）。
-2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达10次的查找与替换操作。
-3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为8个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
+2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达8次的查找与替换操作。
+3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为多个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
 4.  **Show Text**: 直接在节点界面上显示输入的文本。
 5.  **Simple Text**: 一个简单的文本输入节点，用于将字符串传递给其他节点。
+6.  **Text Split By Delimiter**: 根据分隔符将文本字符串分割为列表。
+7.  **Get List Element**: 通过索引从列表中检索特定元素。
+8.  **Text Iterator**: 根据分隔符分割文本并作为批次输出，触发下游节点的批次执行。
 
 ### 🔧 安装方法
 
@@ -163,7 +184,7 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
     -   **📝 纯文本生成**: 将 `image_1` 和 `image_2` 保持断开。
     -   **🖼️ 单图描述**: 连接一张图片到 `image_1` 接口。
     -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。
-    -   **📸 多图分析**: 您最多可以连接3张图片 (`image_1`, `image_2`, `image_3`) 进行复杂的分析任务。
+    -   **📸 多图分析**: 您最多可以连接多张图片 (`image_1`, `image_2`, `image_3...等`) 进行复杂的分析任务。
 4.  **API 连接示例**:
     -   **本地 Ollama**:
         -   `api_baseurl`: `http://127.0.0.1:11434/v1`
@@ -196,6 +217,21 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 #### Simple Text
 -   在文本框中输入您的文本。
 -   将 `text` 输出连接到任何需要字符串输入的节点。
+
+#### Text Split By Delimiter
+-   输入文本和分隔符（默认为逗号）。
+-   输出一个 `LIST` 类型，可与 `Get List Element` 配合使用。
+![Text Split By Delimiter](./assets/text_split.png)
+
+#### Get List Element
+-   连接 `LIST` 输入。
+-   指定索引（从0开始）以检索特定字符串。
+
+#### Text Iterator
+-   输入文本和分隔符。
+-   将每个分割项作为单独的批次项输出。
+-   用于迭代提示词列表或参数列表。
+![Text Iterator 界面](./assets/Text_Iterator.png)
 
 ### 📜 许可证
 

@@ -22,13 +22,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 from .general_api_node import FeiMao_326_GeneralAPINode
 from .text_utils_node import FeiMao_326_TextBatchReplace
 from .json_parser_node import FeiMao_326_JsonParser
 from .ShowTextNode import ShowTextNode
 from .SimpleTextNode import SimpleTextNode
+from .list_utils_node import FeiMao_326_TextSplitByDelimiter, FeiMao_326_GetListElement, FeiMao_326_TextIterator
+
 
 NODE_CLASS_MAPPINGS = {
     "FeiMao_326_GeneralAPINode": FeiMao_326_GeneralAPINode,
@@ -36,6 +38,9 @@ NODE_CLASS_MAPPINGS = {
     "FeiMao_326_JsonParser": FeiMao_326_JsonParser,
     "ShowTextNode": ShowTextNode,
     "SimpleTextNode": SimpleTextNode,
+    "FeiMao_326_TextSplitByDelimiter": FeiMao_326_TextSplitByDelimiter,
+    "FeiMao_326_GetListElement": FeiMao_326_GetListElement,
+    "FeiMao_326_TextIterator": FeiMao_326_TextIterator,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -44,6 +49,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FeiMao_326_JsonParser": f"JSON Parser (FeiMao-326)",
     "ShowTextNode": "Show Text (FeiMao-326)",
     "SimpleTextNode": "Simple Text (FeiMao-326)",
+    "FeiMao_326_TextSplitByDelimiter": "Text Split By Delimiter (Array) (FeiMao-326)",
+    "FeiMao_326_GetListElement": "Get List Element (List) (FeiMao-326)",
+    "FeiMao_326_TextIterator": "Text Iterator (FeiMao-326)",
 }
 
 WEB_DIRECTORY = "./js"

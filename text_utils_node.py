@@ -13,18 +13,40 @@
 # limitations under the License.
 
 class FeiMao_326_TextBatchReplace:
-    MAX_PAIRS = 10
     @classmethod
     def INPUT_TYPES(s):
-        inputs = {"required": {"text": ("STRING", {"multiline": True, "default": ""})}, "optional": {}}
-        for i in range(1, s.MAX_PAIRS + 1):
+        inputs = {
+            "required": {
+                "text": ("STRING", {"multiline": True, "default": ""})
+            },
+            "optional": {}
+        }
+        
+        for i in range(1, 9):
             inputs["optional"][f"find_{i}"] = ("STRING", {"multiline": False, "default": ""})
             inputs["optional"][f"replace_{i}"] = ("STRING", {"multiline": False, "default": ""})
+            
         return inputs
+
     RETURN_TYPES = ("STRING",); RETURN_NAMES = ("text",); FUNCTION = "execute"; CATEGORY = "FeiMao-326"
     def execute(self, text, **kwargs):
         modified_text = text
-        for i in range(1, self.MAX_PAIRS + 1):
-            find_str = kwargs.get(f"find_{i}", ""); replace_str = kwargs.get(f"replace_{i}", "")
-            if find_str: modified_text = modified_text.replace(find_str, replace_str)
+        
+        all_pairs = []
+        for key, value in kwargs.items():
+            if key.startswith("find_"):
+                try:
+                    idx = int(key.split("_")[1])
+                    all_pairs.append((idx, value, kwargs.get(f"replace_{idx}", "")))
+                except ValueError:
+                    pass
+        
+        # Sort by index
+        all_pairs.sort(key=lambda x: x[0])
+        
+        # Re-apply based on sorted list
+        for _, find_s, replace_s in all_pairs:
+            if find_s:
+                modified_text = modified_text.replace(find_s, replace_s)
+                
         return (modified_text,)

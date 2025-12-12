@@ -19,7 +19,10 @@ app.registerExtension({
                     }
                 }
 
-                const text = message.text[0];
+                let text = message.text;
+                if (Array.isArray(text)) {
+                    text = text.join("\n");
+                }
                 const w = ComfyWidgets["STRING"](this, "text", ["STRING", { multiline: true }], app).widget;
                 w.inputEl.readOnly = true;
                 w.inputEl.style.opacity = 0.6;
