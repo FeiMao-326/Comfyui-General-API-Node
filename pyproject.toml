@@ -14,18 +14,8 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/FeiMao-326/Comfyui-General-API-Node"
-Documentation = "https://github.com/FeiMao-326/Comfyui-General-API-Node/wiki"
-"Bug Tracker" = "https://github.com/FeiMao-326/Comfyui-General-API-Node/issues"
 
-# ---- Comfy Registry metadata ----
 [tool.comfy]
-publisher = "feimao"
-name = "comfyui-general-api-node"
-display_name = "Comfyui-General-API-Node"
-version = "1.0.4"
-icon = ""
-
-# If your repo needs extra files included in the published package, list them here.
-# Usually you can leave this empty if your nodes are in the repo root and imported via __init__.py.
-includes = []
-# requires-comfyui = ">=1.0.0"
+PublisherId = "feimao"
+DisplayName = "Comfyui-General-API-Node"
+Icon = ""
