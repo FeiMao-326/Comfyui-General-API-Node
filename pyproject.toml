@@ -1,5 +1,5 @@
 [project]
-name = "Comfyui-General-API-Node"
+name = "general-api-node"
 description = "A suite of powerful and versatile utility nodes for ComfyUI, designed to streamline complex workflows involving Large Language Models and text manipulation."
 version = "1.0.5"
 license = { file = "LICENSE" }
