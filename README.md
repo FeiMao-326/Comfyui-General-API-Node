@@ -21,6 +21,7 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
 1.  **General API Node**: A robust Vision LLM API node.
     -   Supports multi-image inputs.
     -   Features automatic GPU cleanup for local Ollama.
+    -   **[NEW]** Native Google Gemini API support (Chat & Image Generation).
     -   Includes advanced seed control (`fixed`, `increment`, `randomize`).
 2.  **Text Batch Replace**: A powerful text utility for performing up to 8 find-and-replace operations in a single node.
 3.  **JSON Parser**: Deconstructs complex, nested JSON payloads into multiple separate text outputs with a built-in labeled preview. It deeply searches for user-defined keys, perfect for handling structured prompts.
@@ -77,9 +78,12 @@ This pack contains the following nodes, all available under the **`FeiMao-326`**
         -   `model`: `gemma3:4b` (or another vision-capable model)
         -   `cleanup_local_gpu`: Keep it checked (True).
     -   **External API (e.g., OpenAI)**:
-        -   `api_baseurl`: `https://api.openai.com/v1`
         -   `api_key`: Your OpenAI API key (`sk-xxxxxxxx`)
         -   `model`: `gpt-4o`
+    -   **Google Gemini (Native)**:
+        -   `api_baseurl`: `https://generativelanguage.googleapis.com/v1beta/`
+        -   `api_key`: Your Google AI Studio Key
+        -   `model`: `gemini-1.5-pro` (Chat) or `imagen-3.0-generate-001` (Image)
     Below is a complete example workflow for the dual image transition task:
 
 ![General API Node Workflow Example](./assets/workflow_example.png)
@@ -136,6 +140,7 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
 1.  **General API Node**: 一个强大的视觉LLM API节点。
     -   支持多图像输入。
     -   为本地 Ollama 提供自动 GPU 清理功能。
+    -   **[新增]** 原生 Google Gemini API 支持 (对话 & 绘图)。
     -   包含高级种子控制（`固定`, `递增`, `随机` 等）。
 2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达8次的查找与替换操作。
 3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为多个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
@@ -195,6 +200,10 @@ This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE
         -   `api_baseurl`: `https://api.openai.com/v1`
         -   `api_key`: 填入您的 OpenAI 密钥 (`sk-xxxxxxxx`)
         -   `model`: `gpt-4o`
+    -   **Google Gemini (原生)**:
+        -   `api_baseurl`: `https://generativelanguage.googleapis.com/v1beta/`
+        -   `api_key`: 填入您的 Google AI Studio 密钥
+        -   `model`: `gemini-1.5-pro` (对话) 或 `imagen-3.0-generate-001` (绘图)
     下面是一个完整的双图转场任务的示例工作流：
 
 ![General API Node 工作流示例](./assets/workflow_example.png)

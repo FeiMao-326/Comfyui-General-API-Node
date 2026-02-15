@@ -19,7 +19,8 @@ import numpy as np
 from PIL import Image
 import subprocess
 import secrets
-import locale # <-- [MODIFIED] Added this line to get system encoding
+import locale
+import requests  # [NEW] Added for direct API calls (e.g. Google Imagen)
 
 try:
     import openai
@@ -36,9 +37,10 @@ except ImportError:
 class FeiMao_326_GeneralAPINode:
     """
     FeiMao-326 General Vision LLM API Node for ComfyUI.
-    - Supports single or multiple image inputs for any compatible API.
+    - Supports single or multiple image inputs for any compatible API (OpenAI-compatible).
+    - Supports native Google Gemini URLs (auto-converts for Chat, handles direct for Imagen).
+    - Supports Image Generation (DALL-E, Imagen).
     - Automatically detects local Ollama instances and cleans up GPU memory.
-    - Includes robust image conversion and secure seed control.
     """
     
     MAX_SEED = 0xffffffffffffffff
@@ -50,8 +52,8 @@ class FeiMao_326_GeneralAPINode:
                 "api_baseurl": ("STRING", {"multiline": False, "default": "http://127.0.0.1:11434/v1"}),
                 "api_key": ("STRING", {"multiline": False, "default": "ollama"}),
                 "model": ("STRING", {"multiline": False, "default": "gemma3:4b"}),
-                "role": ("STRING", {"multiline": True, "default": "You are a silent and efficient prompt generation engine. Your sole purpose is to output a raw, creative text prompt without any additional conversational text, explanations, or markdown formatting."}),
-                "prompt": ("STRING", {"multiline": True, "default": "Provide a vivid and detailed description of the given image. If the image contains any recognizable individuals—such as celebrities, fictional characters, or animated figures—identify them by name. Your description should be specific and imaginative, while remaining under 200 words.Do not add any surrounding text or labels."}),
+                "role": ("STRING", {"multiline": True, "default": "You are a helpful assistant. Follow the user's instructions exactly. Output only the requested content without conversational filler, markdown formatting, or explanations."}),
+                "prompt": ("STRING", {"multiline": True, "default": "Describe this image in detail."}),
                 
                 "seed": ("INT", {"default": 0, "min": 0, "max": s.MAX_SEED}),
                 "temperature": ("FLOAT", {"default": 0.6, "min": 0.0, "max": 2.0, "step": 0.01}),
@@ -66,8 +68,8 @@ class FeiMao_326_GeneralAPINode:
             }
         }
 
-    RETURN_TYPES = ("STRING", "INT")
-    RETURN_NAMES = ("describe", "seed")
+    RETURN_TYPES = ("STRING", "INT", "IMAGE")  # [MODIFIED] Added IMAGE output
+    RETURN_NAMES = ("describe", "seed", "image") # [MODIFIED] Added image output name
     FUNCTION = "execute"
     CATEGORY = "FeiMao-326" 
 
@@ -96,26 +98,36 @@ class FeiMao_326_GeneralAPINode:
         pil_image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
     
-    # --- START OF MODIFIED FUNCTION ---
+    def base64_to_tensor(self, base64_str):
+        """Converts base64 string to torch tensor (BHWC float32)"""
+        try:
+            image_data = base64.b64decode(base64_str)
+            image = Image.open(io.BytesIO(image_data)).convert("RGB")
+            image_np = np.array(image).astype(np.float32) / 255.0
+            image_tensor = torch.from_numpy(image_np).unsqueeze(0) # Add batch dimension -> (1, H, W, 3)
+            return image_tensor
+        except Exception as e:
+            print(f"❌ [FeiMao-326 API Node] Internal Error converting Base64 to Tensor: {e}")
+            return self.get_empty_image()
+
+    def get_empty_image(self):
+        """Returns a 1x1x3 black image tensor"""
+        return torch.zeros((1, 1, 1, 3), dtype=torch.float32)
+
     def cleanup_with_ollama_cli(self, model):
         command = ['ollama', 'stop', model]
         print(f"🔵 [FeiMao-326 API Node] Attempting to unload local model via CLI: {' '.join(command)}")
         try:
-            # Removed text=True to capture raw bytes
             result = subprocess.run(command, capture_output=True, timeout=20, check=False)
             
             if result.returncode == 0:
                 print(f"✅ [FeiMao-326 API Node] CLI command executed successfully. Model '{model}' unloaded.")
             else:
-                # Added robust decoding logic
                 stderr_output = result.stderr
                 error_message = ""
                 try:
-                    # First, try decoding with standard UTF-8
                     error_message = stderr_output.decode('utf-8')
                 except UnicodeDecodeError:
-                    # If UTF-8 fails, fall back to the system's preferred encoding (e.g., GBK on Chinese Windows)
-                    # errors='replace' prevents a crash if a character still can't be decoded
                     system_encoding = locale.getpreferredencoding()
                     error_message = stderr_output.decode(system_encoding, errors='replace')
 
@@ -124,95 +136,247 @@ class FeiMao_326_GeneralAPINode:
             print("❌ [FeiMao-326 API Node] Error: 'ollama' command not found. Please ensure Ollama is installed correctly.")
         except Exception as e:
             print(f"⚠️ [FeiMao-326 API Node] An error occurred while executing the CLI command: {str(e)}")
-    # --- END OF MODIFIED FUNCTION ---
 
     def execute(self, api_baseurl, api_key, model, role, prompt, seed, temperature, max_tokens, control_after_generate,
                 cleanup_local_gpu=True, image_1=None, image_2=None, image_3=None, **kwargs):
         
         current_seed = self._normalize_seed(seed)
+        generated_image_tensor = self.get_empty_image() # Default empty image
         
+        # Enforce silent role if empty or default
+        if not role or not role.strip():
+            role = "You are a helpful assistant. Follow the user's instructions exactly. Output only the requested content without conversational filler."
+
         if not OPENAI_AVAILABLE: 
-            return ("Error: The 'openai' library is not installed. Please run: pip install -r requirements.txt", current_seed)
+            return ("Error: The 'openai' library is not installed. Please run: pip install -r requirements.txt", current_seed, generated_image_tensor)
         if not api_baseurl or not model: 
-            return ("Error: 'api_baseurl' and 'model' are required fields.", current_seed)
+            return ("Error: 'api_baseurl' and 'model' are required fields.", current_seed, generated_image_tensor)
 
-        try: 
-            client = openai.OpenAI(api_key=api_key, base_url=api_baseurl)
-        except Exception as e: 
-            return (f"Failed to initialize the API client: {type(e).__name__}: {str(e)}", current_seed)
+        # --- 1. HANDLE GEMINI NATIVE URLS & IMAGE GENERATION DETECTION ---
+        is_gemini_native = "generativelanguage.googleapis.com" in api_baseurl
+        lower_model = model.lower()
+        is_imagen_model = "imagen" in lower_model
+        is_gemini_image_model = "gemini" in lower_model and "image-" in lower_model
+        is_dalle_model = "dall-e" in lower_model
+        is_vision_generation = is_imagen_model or is_gemini_image_model or is_dalle_model
 
-        messages = [{"role": "system", "content": role}]
-        user_content = [{"type": "text", "text": prompt}]
+        # Auto-correct Gemini base URL for Chat Completions if needed
+        # Native: https://generativelanguage.googleapis.com/v1beta/
+        # OpenAI Compatible: https://generativelanguage.googleapis.com/v1beta/openai/
+        if is_gemini_native and not "openai" in api_baseurl and not is_vision_generation:
+            if api_baseurl.endswith("/"):
+                api_baseurl += "openai/"
+            else:
+                api_baseurl += "/openai/"
+            print(f"🔵 [FeiMao-326 API Node] Auto-corrected Gemini URL to OpenAI-compatible endpoint: {api_baseurl}")
+
+        # Initialize Client (only needed for Chat or DALL-E, not for Gemini native Rest)
+        client = None
+        if not (is_gemini_native and is_imagen_model):
+            try: 
+                client = openai.OpenAI(api_key=api_key, base_url=api_baseurl)
+            except Exception as e: 
+                return (f"Failed to initialize the API client: {type(e).__name__}: {str(e)}", current_seed, generated_image_tensor)
+
+        # --- 2. EXECUTION BRANCHING ---
         
-        has_images = False
-        
-        # Collect all image inputs
-        image_inputs = []
-        if image_1 is not None: image_inputs.append(("image_1", image_1))
-        if image_2 is not None: image_inputs.append(("image_2", image_2))
-        if image_3 is not None: image_inputs.append(("image_3", image_3))
-        
-        for key, value in kwargs.items():
-            if key.startswith("image_") and value is not None:
-                image_inputs.append((key, value))
-        
-        # Sort images by index (image_1, image_2, ..., image_10)
-        def get_image_index(name):
+        # BRANCH A: Gemini Native Image Generation (via REST API)
+        if is_gemini_native and (is_imagen_model or is_gemini_image_model):
+            print(f"🎨 [FeiMao-326 API Node] Detected Google generation task...")
+            
+            # Remove trailing slash and openai part if mistakenly present for REST call
+            clean_base_url = api_baseurl.replace("/openai/", "/").rstrip("/")
+            
             try:
-                return int(name.split("_")[1])
-            except (IndexError, ValueError):
-                return 999999
-        
-        image_inputs.sort(key=lambda x: get_image_index(x[0]))
-        
-        for name, img_tensor in image_inputs:
-            try:
-                print(f"🖼️ [FeiMao-326 API Node] Processing {name}...")
-                base64_image = self.tensor_to_base64_image(img_tensor)
-                user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
-                has_images = True
+                # Sub-branch A1: Imagen Models (use :predict)
+                if is_imagen_model:
+                    print(f"🔹 Using 'predict' endpoint for Imagen model: {model}")
+                    url = f"{clean_base_url}/models/{model}:predict?key={api_key}"
+                    payload = {
+                        "instances": [{"prompt": prompt}],
+                        "parameters": {"sampleCount": 1}
+                    }
+                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+                    
+                    if response.status_code != 200:
+                        raise Exception(f"Google API Error {response.status_code}: {response.text}")
+                    
+                    data = response.json()
+                    if "predictions" in data and len(data["predictions"]) > 0:
+                        b64_img = data["predictions"][0]["bytesBase64Encoded"]
+                        generated_image_tensor = self.base64_to_tensor(b64_img)
+                        response_text = "Image generated successfully via Google Imagen."
+                    else:
+                        raise Exception("No image data found in Google Imagen response.")
+
+                # Sub-branch A2: Gemini Image Models (use :generateContent)
+                # This covers 'gemini-3-pro-image-preview' etc.
+                else: 
+                    print(f"🔹 Using 'generateContent' endpoint for Gemini Image model: {model}")
+                    url = f"{clean_base_url}/models/{model}:generateContent?key={api_key}"
+                    
+                    # Prepare parts with text prompt first
+                    parts = [{"text": prompt}]
+
+                    # Collect and append images if present
+                    image_inputs = []
+                    if image_1 is not None: image_inputs.append(("image_1", image_1))
+                    if image_2 is not None: image_inputs.append(("image_2", image_2))
+                    if image_3 is not None: image_inputs.append(("image_3", image_3))
+                    
+                    for key, value in kwargs.items():
+                        if key.startswith("image_") and value is not None:
+                            image_inputs.append((key, value))
+                    
+                    # Sort images by index
+                    image_inputs.sort(key=lambda x: int(x[0].split("_")[1]) if "_" in x[0] else 999)
+
+                    for name, img_tensor in image_inputs:
+                        print(f"🖼️ [FeiMao-326 API Node] Adding {name} to payload...")
+                        b64_img = self.tensor_to_base64_image(img_tensor)
+                        parts.append({
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": b64_img
+                            }
+                        })
+
+                    payload = {
+                        "contents": [{
+                            "parts": parts
+                        }]
+                    }
+                    
+                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+                    
+                    if response.status_code != 200:
+                        raise Exception(f"Google API Error {response.status_code}: {response.text}")
+                    
+                    data = response.json()
+                    # Parse structure: candidates[0].content.parts[0].inlineData.data
+                    try:
+                        # Gemini might return text + image or just image. We look for the image part.
+                        cand_parts = data["candidates"][0]["content"]["parts"]
+                        b64_img = None
+                        
+                        for p in cand_parts:
+                            if "inlineData" in p:
+                                b64_img = p["inlineData"]["data"]
+                                break
+                        
+                        if b64_img:
+                            generated_image_tensor = self.base64_to_tensor(b64_img)
+                            response_text = "Image generated successfully via Google Gemini."
+                        else:
+                            raise Exception(f"No inlineData found in response parts. Parts keys: {[list(p.keys()) for p in cand_parts]}")
+                            
+                    except (KeyError, IndexError) as e:
+                        raise Exception(f"Failed to parse Gemini image response: {str(e)}. Raw data: {str(data)[:200]}...")
+
             except Exception as e:
-                return (f"Failed to process {name}: {type(e).__name__}: {str(e)}", current_seed)
-        
-        messages.append({"role": "user", "content": user_content if has_images else prompt})
-        
-        response_text = ""
-        try:
-            print(f"🔵 [FeiMao-326 API Node] Calling model '{model}' at '{api_baseurl}'...")
+                return (f"Google Generation failed: {str(e)}", current_seed, generated_image_tensor)
+
+        # BRANCH B: DALL-E Image Generation (via OpenAI API)
+        elif is_dalle_model:
+            print(f"🎨 [FeiMao-326 API Node] Detected DALL-E generation task...")
+            try:
+                response = client.images.generate(
+                    model=model,
+                    prompt=prompt,
+                    size="1024x1024",
+                    quality="standard",
+                    n=1,
+                    response_format="b64_json"
+                )
+                
+                if response.data:
+                    b64_img = response.data[0].b64_json
+                    generated_image_tensor = self.base64_to_tensor(b64_img)
+                    response_text = response.data[0].revised_prompt or "Image generated successfully via DALL-E."
+                else:
+                     raise Exception("No data in DALL-E response.")
+                     
+            except Exception as e:
+                 return (f"DALL-E Generation failed: {str(e)}", current_seed, generated_image_tensor)
+
+        # BRANCH C: Chat Completion (Text-to-Text / Vision-to-Text)
+        else:
+            messages = [{"role": "system", "content": role}]
+            user_content = [{"type": "text", "text": prompt}]
             
-            api_params = {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "seed": current_seed,
-                "max_tokens": max_tokens
-            }
+            has_images = False
             
-            response = client.chat.completions.create(**api_params)
-            response_text = response.choices[0].message.content
-            print(f"✅ [FeiMao-326 API Node] API call successful.")
+            # Collect all image inputs
+            image_inputs = []
+            if image_1 is not None: image_inputs.append(("image_1", image_1))
+            if image_2 is not None: image_inputs.append(("image_2", image_2))
+            if image_3 is not None: image_inputs.append(("image_3", image_3))
+            
+            for key, value in kwargs.items():
+                if key.startswith("image_") and value is not None:
+                    image_inputs.append((key, value))
+            
+            # Sort images by index
+            def get_image_index(name):
+                try:
+                    return int(name.split("_")[1])
+                except (IndexError, ValueError):
+                    return 999999
+            
+            image_inputs.sort(key=lambda x: get_image_index(x[0]))
+            
+            for name, img_tensor in image_inputs:
+                try:
+                    print(f"🖼️ [FeiMao-326 API Node] Processing {name}...")
+                    base64_image = self.tensor_to_base64_image(img_tensor)
+                    user_content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}})
+                    has_images = True
+                except Exception as e:
+                    return (f"Failed to process {name}: {type(e).__name__}: {str(e)}", current_seed, generated_image_tensor)
+            
+            messages.append({"role": "user", "content": user_content if has_images else prompt})
+            
+            response_text = ""
+            try:
+                print(f"🔵 [FeiMao-326 API Node] Calling model '{model}' at '{api_baseurl}'...")
+                
+                api_params = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
 
-        except Exception as e:
-            error_message = f"API call failed: {type(e).__name__}: {str(e)}"
-            print(f"❌ [FeiMao-326 API Node] {error_message}")
-            if "context_length" in str(e).lower() or "token" in str(e).lower():
-                error_message += "\n\nHint: The input (especially images) might be too large for the model's context window. Try reducing the image resolution."
-            elif has_images and ("invalid" in str(e).lower() or "variant" in str(e).lower()):
-                 error_message += f"\n\nHint: The model '{model}' may not support image inputs. Try a vision-capable model like 'llava'."
-            response_text = error_message
+                # Gemini's OpenAI compatibility layer does not support the 'seed' parameter
+                if not is_gemini_native:
+                    api_params["seed"] = current_seed
+                
+                response = client.chat.completions.create(**api_params)
+                response_text = response.choices[0].message.content
+                print(f"✅ [FeiMao-326 API Node] API call successful.")
 
-        finally:
-            is_local_ollama = "127.0.0.1" in api_baseurl or "localhost" in api_baseurl
-            if cleanup_local_gpu and is_local_ollama:
-                self.cleanup_with_ollama_cli(model)
-                if TORCH_AVAILABLE and torch.cuda.is_available():
-                    print(f"🔵 [FeiMao-326 API Node] Clearing PyTorch GPU cache...")
-                    torch.cuda.empty_cache()
-                    torch.cuda.ipc_collect()
-                    print(f"✅ [FeiMao-326 API Node] PyTorch GPU cache cleared.")
-            elif cleanup_local_gpu and not is_local_ollama:
-                print(f"🔵 [FeiMao-326 API Node] External API URL detected, skipping local GPU cleanup.")
+            except Exception as e:
+                error_message = f"API call failed: {type(e).__name__}: {str(e)}"
+                print(f"❌ [FeiMao-326 API Node] {error_message}")
+                if "context_length" in str(e).lower() or "token" in str(e).lower():
+                    error_message += "\n\nHint: The input (especially images) might be too large for the model's context window. Try reducing the image resolution."
+                elif has_images and ("invalid" in str(e).lower() or "variant" in str(e).lower()):
+                     error_message += f"\n\nHint: The model '{model}' may not support image inputs. Try a vision-capable model like 'llava'."
+                response_text = error_message
 
+            finally:
+                is_local_ollama = "127.0.0.1" in api_baseurl or "localhost" in api_baseurl
+                if cleanup_local_gpu and is_local_ollama:
+                    self.cleanup_with_ollama_cli(model)
+                    if TORCH_AVAILABLE and torch.cuda.is_available():
+                        print(f"🔵 [FeiMao-326 API Node] Clearing PyTorch GPU cache...")
+                        torch.cuda.empty_cache()
+                        torch.cuda.ipc_collect()
+                        print(f"✅ [FeiMao-326 API Node] PyTorch GPU cache cleared.")
+                elif cleanup_local_gpu and not is_local_ollama:
+                    pass
+
+        # --- 3. SEED CONTROL ---
         if control_after_generate == "increment":
             next_seed = current_seed + 1
         elif control_after_generate == "decrement":
@@ -222,4 +386,4 @@ class FeiMao_326_GeneralAPINode:
         else:
             next_seed = current_seed
             
-        return (response_text, self._normalize_seed(next_seed))
+        return (response_text, self._normalize_seed(next_seed), generated_image_tensor)
