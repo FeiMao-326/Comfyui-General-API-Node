@@ -37,6 +37,10 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
+<<<<<<< HEAD
+=======
+                    app.canvas.setDirty?.(true);
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
 
                 if (maxExistingIndex > targetCount) {
@@ -48,6 +52,10 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
+<<<<<<< HEAD
+=======
+                    app.canvas.setDirty?.(true);
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
             };
         }
@@ -88,6 +96,10 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
+<<<<<<< HEAD
+=======
+                    app.canvas.setDirty?.(true);
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
 
                 if (maxExistingIndex > finalTargetCount) {
@@ -102,5 +114,51 @@ app.registerExtension({
                 }
             };
         }
+<<<<<<< HEAD
+=======
+
+        // --- 3. Text Template (Variable-based Dynamic Inputs) ---
+        if (nodeData.name === "FeiMao_326_TextTemplate") {
+            const onNodeCreated = nodeType.prototype.onNodeCreated;
+            nodeType.prototype.onNodeCreated = function () {
+                const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
+                const templateWidget = this.widgets.find(w => w.name === "template");
+                
+                const updateInputs = () => {
+                    const text = templateWidget.value || "";
+                    // Match all {var_name} (Support Unicode/Chinese)
+                    const matches = text.match(/\{([^{}\s]+)\}/g) || [];
+                    const vars = [...new Set(matches.map(m => m.slice(1, -1)))];
+                    
+                    // Add new inputs
+                    vars.forEach(v => {
+                        if (!this.inputs || !this.inputs.find(i => i.name === v)) {
+                            this.addInput(v, "*"); // Universal type
+                        }
+                    });
+                    
+                    // Remove outdated inputs
+                    if (this.inputs) {
+                        for (let i = this.inputs.length - 1; i >= 0; i--) {
+                            const inputName = this.inputs[i].name;
+                            if (!vars.includes(inputName)) {
+                                this.removeInput(i);
+                            }
+                        }
+                    }
+                    
+                    this.onResize?.(this.size);
+                    app.canvas.setDirty?.(true);
+                };
+
+                // Watch for widget changes
+                templateWidget.callback = updateInputs;
+                
+                // Initial sync
+                setTimeout(updateInputs, 100); 
+                return r;
+            };
+        }
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
     },
 });

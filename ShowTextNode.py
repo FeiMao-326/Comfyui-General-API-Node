@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 class ShowTextNode:
+=======
+class FeiMao_326_ShowTextNode:
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
     @classmethod
     def INPUT_TYPES(s):
         return {

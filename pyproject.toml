@@ -1,9 +1,16 @@
 [project]
 name = "general-api-node"
 description = "A suite of powerful and versatile utility nodes for ComfyUI, designed to streamline complex workflows involving Large Language Models and text manipulation."
+<<<<<<< HEAD
 version = "1.0.5"
 license = { file = "LICENSE" }
 readme = "README.md"
+=======
+version = "1.0.6"
+license = { file = "LICENSE" }
+readme = "README.md"
+keywords = ["comfyui", "api", "llm", "gemini", "vision", "gpt-5", "ollama"]
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
 requires-python = ">=3.9"
 
 dependencies = [
@@ -14,8 +21,16 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/FeiMao-326/Comfyui-General-API-Node"
+<<<<<<< HEAD
+=======
+Documentation = "https://github.com/FeiMao-326/Comfyui-General-API-Node/blob/main/README.md"
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
 
 [tool.comfy]
 PublisherId = "feimao"
 DisplayName = "Comfyui-General-API-Node"
 Icon = ""
+<<<<<<< HEAD
+=======
+requires-comfyui = ">=0.2.0"
+>>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
