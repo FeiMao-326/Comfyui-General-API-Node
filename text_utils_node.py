@@ -49,9 +49,6 @@ class FeiMao_326_TextBatchReplace:
             if find_s:
                 modified_text = modified_text.replace(find_s, replace_s)
                 
-<<<<<<< HEAD
-        return (modified_text,)
-=======
         return (modified_text,)
 
 class FeiMao_326_MarkdownExtractor:
@@ -302,4 +299,4 @@ class FeiMao_326_DictionaryReplace:
                 result = result.replace(k, mapping[k])
                 
         return (result,)
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
+

@@ -2,7 +2,6 @@
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -51,28 +50,22 @@ class FeiMao_326_GeneralAPINode:
             "required": {
                 "api_baseurl": ("STRING", {"multiline": False, "default": "http://127.0.0.1:11434/v1"}),
                 "api_key": ("STRING", {"multiline": False, "default": "ollama"}),
-<<<<<<< HEAD
-                "model": ("STRING", {"multiline": False, "default": "gemma3:4b"}),
-=======
                 "model": ("STRING", {"multiline": False, "default": "gemma4:e4b"}),
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 "role": ("STRING", {"multiline": True, "default": "You are a helpful assistant. Follow the user's instructions exactly. Output only the requested content without conversational filler, markdown formatting, or explanations."}),
                 "prompt": ("STRING", {"multiline": True, "default": "Describe this image in detail."}),
                 
                 "seed": ("INT", {"default": 0, "min": 0, "max": s.MAX_SEED}),
                 "temperature": ("FLOAT", {"default": 0.6, "min": 0.0, "max": 2.0, "step": 0.01}),
-<<<<<<< HEAD
-                "max_tokens": ("INT", {"default": 4096, "min": 64, "max": 16384, "step": 64}),
-=======
                 "max_tokens": ("INT", {"default": 4096, "min": 64, "max": 131072, "step": 512}),
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 "control_after_generate": (["fixed", "increment", "decrement", "randomize"],),
                 "cleanup_local_gpu": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "image_1": ("IMAGE",),
                 "image_2": ("IMAGE",),
-                "image_3": ("IMAGE",)
+                "image_3": ("IMAGE",),
+                "system_proxy": ("STRING", {"multiline": False, "default": ""}),
+                "force_json_format": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -122,30 +115,7 @@ class FeiMao_326_GeneralAPINode:
         """Returns a 1x1x3 black image tensor"""
         return torch.zeros((1, 1, 1, 3), dtype=torch.float32)
 
-<<<<<<< HEAD
-    def cleanup_with_ollama_cli(self, model):
-        command = ['ollama', 'stop', model]
-        print(f"🔵 [FeiMao-326 API Node] Attempting to unload local model via CLI: {' '.join(command)}")
-        try:
-            result = subprocess.run(command, capture_output=True, timeout=20, check=False)
-            
-            if result.returncode == 0:
-                print(f"✅ [FeiMao-326 API Node] CLI command executed successfully. Model '{model}' unloaded.")
-            else:
-                stderr_output = result.stderr
-                error_message = ""
-                try:
-                    error_message = stderr_output.decode('utf-8')
-                except UnicodeDecodeError:
-                    system_encoding = locale.getpreferredencoding()
-                    error_message = stderr_output.decode(system_encoding, errors='replace')
 
-                print(f"❌ [FeiMao-326 API Node] CLI command execution failed: {error_message.strip()}")
-        except FileNotFoundError:
-            print("❌ [FeiMao-326 API Node] Error: 'ollama' command not found. Please ensure Ollama is installed correctly.")
-        except Exception as e:
-            print(f"⚠️ [FeiMao-326 API Node] An error occurred while executing the CLI command: {str(e)}")
-=======
     def cleanup_ollama_model(self, api_baseurl, model):
         """
         Unloads an Ollama model from memory.
@@ -198,22 +168,20 @@ class FeiMao_326_GeneralAPINode:
                 print("❌ [FeiMao-326 API Node] Error: 'ollama' command not found. Environment variable may not be configured.")
             except Exception as e:
                 print(f"⚠️ [FeiMao-326 API Node] CLI stop error: {str(e)}")
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
 
     def execute(self, api_baseurl, api_key, model, role, prompt, seed, temperature, max_tokens, control_after_generate,
-                cleanup_local_gpu=True, image_1=None, image_2=None, image_3=None, **kwargs):
+                cleanup_local_gpu=True, system_proxy="", force_json_format=False, image_1=None, image_2=None, image_3=None, **kwargs):
         
         current_seed = self._normalize_seed(seed)
         generated_image_tensor = self.get_empty_image() # Default empty image
         
-<<<<<<< HEAD
-=======
+
         # --- 0. AUTO-MAPPING DEPRECATED MODELS ---
         if "gemini-3-pro-preview" in model.lower():
             print(f"⚠️ [FeiMao_326 API Node] Model 'gemini-3-pro-preview' is deprecated. Auto-redirecting to 'gemini-3.1-pro'.")
             model = model.replace("gemini-3-pro-preview", "gemini-3.1-pro")
         
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
+
         # Enforce silent role if empty or default
         if not role or not role.strip():
             role = "You are a helpful assistant. Follow the user's instructions exactly. Output only the requested content without conversational filler."
@@ -244,8 +212,18 @@ class FeiMao_326_GeneralAPINode:
         # Initialize Client (only needed for Chat or DALL-E, not for Gemini native Rest)
         client = None
         if not (is_gemini_native and is_imagen_model):
+            client_params = {"api_key": api_key, "base_url": api_baseurl}
+            if system_proxy and system_proxy.strip():
+                try:
+                    import httpx
+                    proxies = {"http://": system_proxy.strip(), "https://": system_proxy.strip()}
+                    client_params["http_client"] = httpx.Client(proxies=proxies)
+                    print(f"🌐 [FeiMao-326 API Node] Enabled System Proxy: {system_proxy.strip()}")
+                except ImportError:
+                    print("⚠️ [FeiMao-326 API Node] 'httpx' is required for proxy support. Please run 'pip install httpx'.")
+
             try: 
-                client = openai.OpenAI(api_key=api_key, base_url=api_baseurl)
+                client = openai.OpenAI(**client_params)
             except Exception as e: 
                 return (f"Failed to initialize the API client: {type(e).__name__}: {str(e)}", current_seed, generated_image_tensor)
 
@@ -258,6 +236,11 @@ class FeiMao_326_GeneralAPINode:
             # Remove trailing slash and openai part if mistakenly present for REST call
             clean_base_url = api_baseurl.replace("/openai/", "/").rstrip("/")
             
+            req_proxies = None
+            if system_proxy and system_proxy.strip():
+                req_proxies = {"http": system_proxy.strip(), "https": system_proxy.strip()}
+
+            
             try:
                 # Sub-branch A1: Imagen Models (use :predict)
                 if is_imagen_model:
@@ -267,7 +250,7 @@ class FeiMao_326_GeneralAPINode:
                         "instances": [{"prompt": prompt}],
                         "parameters": {"sampleCount": 1}
                     }
-                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, proxies=req_proxies)
                     
                     if response.status_code != 200:
                         raise Exception(f"Google API Error {response.status_code}: {response.text}")
@@ -318,7 +301,7 @@ class FeiMao_326_GeneralAPINode:
                         }]
                     }
                     
-                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+                    response = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, proxies=req_proxies)
                     
                     if response.status_code != 200:
                         raise Exception(f"Google API Error {response.status_code}: {response.text}")
@@ -422,6 +405,9 @@ class FeiMao_326_GeneralAPINode:
                 if not is_gemini_native:
                     api_params["seed"] = current_seed
                 
+                if force_json_format:
+                    api_params["response_format"] = { "type": "json_object" }
+                
                 response = client.chat.completions.create(**api_params)
                 response_text = response.choices[0].message.content
                 print(f"✅ [FeiMao-326 API Node] API call successful.")
@@ -438,11 +424,8 @@ class FeiMao_326_GeneralAPINode:
             finally:
                 is_local_ollama = "127.0.0.1" in api_baseurl or "localhost" in api_baseurl
                 if cleanup_local_gpu and is_local_ollama:
-<<<<<<< HEAD
-                    self.cleanup_with_ollama_cli(model)
-=======
                     self.cleanup_ollama_model(api_baseurl, model)
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
+
                     if TORCH_AVAILABLE and torch.cuda.is_available():
                         print(f"🔵 [FeiMao-326 API Node] Clearing PyTorch GPU cache...")
                         torch.cuda.empty_cache()

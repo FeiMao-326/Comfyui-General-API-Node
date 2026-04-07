@@ -1,3 +1,17 @@
+// Copyright 2025 FeiMao-326
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import { app } from "../../scripts/app.js";
 
 app.registerExtension({
@@ -37,10 +51,7 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
-<<<<<<< HEAD
-=======
                     app.canvas.setDirty?.(true);
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
 
                 if (maxExistingIndex > targetCount) {
@@ -52,10 +63,7 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
-<<<<<<< HEAD
-=======
                     app.canvas.setDirty?.(true);
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
             };
         }
@@ -96,10 +104,7 @@ app.registerExtension({
                         }
                     }
                     this.onResize?.(this.size);
-<<<<<<< HEAD
-=======
                     app.canvas.setDirty?.(true);
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
                 }
 
                 if (maxExistingIndex > finalTargetCount) {
@@ -114,8 +119,6 @@ app.registerExtension({
                 }
             };
         }
-<<<<<<< HEAD
-=======
 
         // --- 3. Text Template (Variable-based Dynamic Inputs) ---
         if (nodeData.name === "FeiMao_326_TextTemplate") {
@@ -159,6 +162,5 @@ app.registerExtension({
                 return r;
             };
         }
->>>>>>> e9ec5ee (feat: Release v1.0.6 with 6 new advanced text nodes and Nodes 2.0 (Vue UI) optimization)
     },
 });

@@ -22,6 +22,8 @@
     -   **智能任务路由**: 针对 Google Gemini 实现自动重定向。使用标准模型名（如 `gemini-3.1-pro`,`gemini-3.1-pro-image-preview`）进行对话或读图；当检测到模型名包含 `image-` 关键字时，自动切换为生图模式。
     -   **显存双重清理**: 专为本地 Ollama 打造。勾选 `cleanup_local_gpu` 后，节点会通过 REST API 发送 `keep_alive: 0` 并辅助 CLI 命令强制卸载模型，在运行完毕后瞬间物理腾空 GPU 显存。
     -   **多模态视觉解析**: 支持多达 2 张及以上图像的并发解析与对比。
+    -   **内置系统代理**: 支持直接填写代理地址 (如 `http://127.0.0.1:7890`)，解决部分地区 API 访问受限的问题。
+    -   **强制 JSON 格式**: 新增 `force_json_format` 开关，强制大模型返回 100% 纯净的结构化 JSON，完美适配自动化解析工作流。
     -   **高级种子控制**: 包含 `固定`, `递增`, `随机` 等工业级种子逻辑。
 2.  **Text Batch Replace**: 一个强大的文本工具，可在单个节点中执行多达8次的查找与替换操作。
 3.  **JSON Parser**: 可将复杂的、深度嵌套的JSON结构，解析为多个独立的文本输出，并自带带标签的预览功能。它会深度搜索用户定义的关键字，非常适合处理结构化提示词。
@@ -36,6 +38,8 @@
 12. **Text Logic Switch**: 文本逻辑开关，基于内容匹配实现工作流 If-Else 分流。
 13. **Regex Extractor Pro**: 高级正则提取，支持捕获组筛选。
 14. **Dictionary Translator**: 词典批量映射替换，支持 JSON 或 Key=Value 格式。
+15. **Save Text**: 将生成的提示词或文本内容持久化保存至本地系统，支持追加模式 (`append`)。
+16. **Load Text**: 从本地的 `input` 文件夹一键加载 txt、json 或 markdown 文件，作为长篇指令传入大模型。
 
 ### 🔧 安装方法
 
@@ -77,30 +81,55 @@
     -   **🖼️ 单图描述**: 连接一张图片到 `image_1` 接口。
     -   **🎬 双图视频转场**: 连接**起始帧**到 `image_1`，连接**结束帧**到 `image_2`。
     -   **📸 多图分析**: 您最多可以连接多张图片 (`image_1`, `image_2`, `image_3...等`) 进行复杂的分析任务。
-4.  **API 连接示例**:
-    -   **NVIDIA NIM (英伟达官方/私有化部署)**:
-        -   `api_baseurl`: `https://integrate.api.nvidia.com/v1` (或私有 NIM 地址)
-        -   `api_key`: 填入您的 NVIDIA API 密钥 (`nvapi-xxxxxxxx`)
-        -   `model`: `meta/llama-4-maverick` 或 `nvidia/nemotron-3-ultra`
-    -   **OpenAI GPT-5 (最新版)**:
-        -   `api_baseurl`: `https://api.openai.com/v1`
-        -   `api_key`: 填入您的 OpenAI 密钥
-        -   `model`: `gpt-5.4-thinking` 或 `o3-pro` (旗舰推理模型)
-    -   **本地 Ollama**:
-        -   `api_baseurl`: `http://127.0.0.1:11434/v1`
-        -   `api_key`: `ollama`
-        -   `model`: `gemma4:e4b` (当前默认模型，支持图像分析)
-        -   `cleanup_local_gpu`: 保持勾选 (True)。
-    -   **外部 API (以 OpenAI 为例)**:
-        -   `api_baseurl`: `https://api.openai.com/v1`
-        -   `api_key`: 填入您的 OpenAI 密钥 (`sk-xxxxxxxx`)
-        -   `model`: `gpt-4o`
-    -   **Google Gemini (原生)**:
-        -   `api_baseurl`: `https://generativelanguage.googleapis.com/v1beta/`
-        -   `api_key`: 填入您的 Google AI Studio 密钥
-        -   `model`: `gemini-3.1-pro` (对话/读图) 或 `gemini-3.1-pro-image-preview` (生图)
-        -   > [!TIP]
-        -   > **重要提示**: 若要使用 Gemini 的 **生图功能**，模型名称必须包含 `image-` 关键词（例如 `gemini-3.1-pro-image-preview`）。单纯的对话或读图分析请使用 `gemini-3.1-pro`。
+4.  **常见 API 厂商配置参数表 (API Connection Guide)**:
+    节点底层基于 OpenAI 兼容协议开发，除了 Google 原生接口外，支持无缝接入市面上 99% 的大模型。
+
+| 厂商 / 平台 | `api_baseurl` (接口地址) | `model` (模型名示例) | 备注说明 |
+| :--- | :--- | :--- | :--- |
+| **本地 Ollama** | `http://127.0.0.1:11434/v1` | `gemma4:e4b` / `llama3` | 自动支持显存清理功能 |
+| **本地 LM Studio** | `http://127.0.0.1:1234/v1` | *(按实际加载的模型名填)* | 跨平台本地部署利器 |
+| **本地 WebUI** (Oobabooga) | `http://127.0.0.1:5000/v1` | *(按实际加载的模型名填)* | 老牌开源大模型 WebUI |
+| **本地 vLLM / TGI** | `http://127.0.0.1:8000/v1` | *(部署时指定的模型名)* | 工业级高并发推理框架 |
+| **OpenAI GPT-5** | `https://api.openai.com/v1` | `gpt-5.4-thinking` / `gpt-4o` | 支持视觉问答能力 |
+| **DeepSeek (深度求索)** | `https://api.deepseek.com/v1` | `deepseek-chat` / `deepseek-reasoner` | 高性价比国产模型 |
+| **阿里云百炼 (Qwen)** | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-vl-plus` / `qwen-max` | `qwen-vl` 系列支持读图 |
+| **智谱 AI (GLM)** | `https://open.bigmodel.cn/api/paas/v4` | `glm-4v` / `glm-4` | `glm-4v` 系列支持读图 |
+| **Moonshot (Kimi)** | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` | 擅长长文本处理 |
+| **Groq (超高速推理)** | `https://api.groq.com/openai/v1` | `llama-3.1-70b-versatile` | 超高速 LPU 硬件推理 |
+| **NVIDIA NIM** | `https://integrate.api.nvidia.com/v1` | `meta/llama-4-maverick` | 英伟达官方/私有化部署 |
+| **Google Gemini (原生)** | `https://generativelanguage.googleapis.com/v1beta/` | `gemini-3.1-pro` / `...-image-preview`| 节点内置原生协议自动转换 |
+
+    > [!TIP]
+    > **Google Gemini 生图说明**: API 支持调用 Gemini 原生生图接口。若要触发**生图模式**，模型名称必须包含 `image-` 关键词（例如 `gemini-3.1-pro-image-preview`）。单纯的对话或图片内容分析请使用常规的 `gemini-3.1-pro` 等名称。
+
+5.  **🌐 内置系统代理 (`system_proxy`) 使用说明**:
+
+    本节点内置了网络代理功能，**无需修改系统环境变量**，即可让 API 请求通过代理转发。
+
+    **工作原理**: 您的代理软件（如 Clash、V2rayN 等）启动后，会在本机开一个 HTTP 本地监听端口。您只需要把这个端口地址填入节点的 `system_proxy` 输入框即可。
+
+    **常见代理软件默认端口**:
+
+    | 代理软件 | 默认填写值 |
+    | :--- | :--- |
+    | **Clash / Clash Verge** | `http://127.0.0.1:7890` |
+    | **V2rayN** | `http://127.0.0.1:10809` |
+    | **Shadowsocks (SS/SSR)** | `http://127.0.0.1:1080` |
+    | **Qv2ray** | `http://127.0.0.1:8889` |
+
+    > [!IMPORTANT]
+    > **什么时候需要填？**
+    > - 使用 **本地 Ollama / LM Studio** 或 **国内 API (DeepSeek, 阿里云, 智谱)** → **不需要填**，留空即可。
+    > - 代理软件已开启 **全局/系统代理** 模式 → **不需要填**，系统已自动转发。
+    > - 代理软件使用的是 **规则模式**（浏览器能翻墙但 Python 程序走不了代理）→ **需要填**，这正是本功能解决的核心痛点。
+
+6.  **🗂️ 强制 JSON 格式 (`force_json_format`) 使用说明**:
+
+    勾选此开关后，节点会强制大模型返回 **100% 纯净的 JSON 字符串**，不会有"好的，以下是JSON："这类废话。
+
+    > [!TIP]
+    > **推荐搭配**: `General API Node (force_json_format ✅)` → `Markdown Extractor` → `JSON Parser`。这条流水线可以实现完全自动化、零人工干预的结构化数据提取。
+
     下面是一个完整的双图转场任务的示例工作流：
 
 ![General API Node 工作流示例](./assets/workflow_example.png)
@@ -165,6 +194,19 @@
 #### Dictionary Translator
 - 核心功能：支持用户输入一个映射表（JSON 或简单的文本对），一键将 Prompt 中的关键词批量替换。
 - 实用场景：把中文通俗词批量映射成专业的生图词库（例如：把“电影感”自动替换成 cinematic lighting, 8k, highly detailed 这一长串）。
+
+
+#### Save Text
+- 核心功能：将工作流中任何节点输出的文本保存为本地文件（保存在 ComfyUI 的 `output` 文件夹下）。
+- **`filename`**: 填写文件名，如 `result.txt`。也支持子目录写法，如 `prompts/scene_01.txt`（子目录会自动创建）。
+- **`append` 开关**: 关闭时每次覆盖文件内容。开启时，新内容追加到文件末尾（适合跑批量任务时汇总所有结果）。
+- 实用场景：批量跑 1000 条提示词时，将每次生成的优质 Prompt 自动保存成 txt 文件存档。
+
+#### Load Text
+- 核心功能：从 ComfyUI 的 `input` 文件夹中读取本地文件，输出为字符串供工作流使用。
+- **支持格式**: `.txt`、`.json`、`.md`、`.csv`。
+- **操作方式**: 节点启动时自动扫描 `input` 文件夹并生成下拉选择列表，直接选择文件即可。
+- 实用场景：将事先准备好的角色设定、世界观描述、或超长提示词模板放入 `input` 文件夹，通过此节点一键注入给 `General API Node`，无需手动复制粘贴。
 
 ### 📜 许可证
 
