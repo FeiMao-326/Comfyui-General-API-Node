@@ -1,7 +1,7 @@
 [project]
 name = "general-api-node"
 description = "A suite of powerful and versatile utility nodes for ComfyUI, designed to streamline complex workflows involving Large Language Models and text manipulation."
-version = "1.0.6"
+version = "1.0.7"
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.9"
